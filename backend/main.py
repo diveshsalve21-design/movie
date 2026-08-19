@@ -6,7 +6,10 @@ import time
 from datetime import date, timedelta
 from typing import List, Optional, Any
 from urllib.parse import quote
-from google import genai
+try:
+    from google import genai
+except ImportError:
+    genai = None
 
 app = FastAPI()
 
@@ -274,7 +277,7 @@ def topup_wallet(data: TopupModel):
 @app.post("/api/ai/recommend")
 def ai_recommend(data: AiRecommendModel):
     try:
-        if not os.getenv("GEMINI_API_KEY"):
+        if not os.getenv("GEMINI_API_KEY") or genai is None:
             raise Exception("No key")
         client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
         prompt = f"Recommend a movie based on mood: {data.mood}, genre: {data.genrePreference}"
