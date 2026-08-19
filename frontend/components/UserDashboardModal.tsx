@@ -6,29 +6,37 @@ interface UserDashboardModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: UserProfile;
+  recentBookings?: Booking[];
 }
 
 export const UserDashboardModal: React.FC<UserDashboardModalProps> = ({
   isOpen,
   onClose,
-  user
+  user,
+  recentBookings = []
 }) => {
   const [activeTab, setActiveTab] = useState<'profile' | 'bookings'>('bookings');
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>(recentBookings);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
       fetch('/api/user')
-        .then((res) => res.json())
+        .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
-          if (data.success) setBookings(data.bookings);
+          if (data?.success && Array.isArray(data.bookings) && data.bookings.length > 0) {
+            setBookings(data.bookings);
+          } else if (recentBookings.length > 0) {
+            setBookings(recentBookings);
+          }
         })
-        .catch(console.error)
+        .catch(() => {
+          if (recentBookings.length > 0) setBookings(recentBookings);
+        })
         .finally(() => setLoading(false));
     }
-  }, [isOpen]);
+  }, [isOpen, recentBookings]);
 
   if (!isOpen) return null;
 

@@ -51,6 +51,7 @@ export default function App() {
   const [bookingData, setBookingData] = useState<any>(null);
   const [finalBooking, setFinalBooking] = useState<Booking | null>(null);
   const [earnedPoints, setEarnedPoints] = useState(0);
+  const [userBookings, setUserBookings] = useState<Booking[]>([]);
 
   // Initialize App (Force Dark Mode)
   useEffect(() => {
@@ -70,7 +71,10 @@ export default function App() {
         setCurrentCity(cData.cities[0]);
       }
       if (mData?.success) setMovies(mData.movies);
-      if (uData?.success) setUser(uData.user);
+      if (uData?.success) {
+        setUser(uData.user);
+        if (Array.isArray(uData.bookings)) setUserBookings(uData.bookings);
+      }
     })
     .catch((err) => {
       console.log('Backend API unavailable, using fallback static data:', err);
@@ -113,11 +117,22 @@ export default function App() {
   const handlePaymentSuccess = (booking: Booking, points: number) => {
     setFinalBooking(booking);
     setEarnedPoints(points);
+    setUserBookings(prev => [booking, ...prev]);
     if (user) {
-      // Refresh user to get updated wallet/points locally
-      fetch('/api/user').then(r => r.json()).then(d => {
-        if(d.success) setUser(d.user);
-      });
+      // Refresh user to get updated wallet/points locally or via API
+      fetch('/api/user')
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          if (d?.success) {
+            setUser(d.user);
+            if (Array.isArray(d.bookings)) setUserBookings(d.bookings);
+          } else {
+            setUser(prev => prev ? { ...prev, rewardPoints: prev.rewardPoints + points } : prev);
+          }
+        })
+        .catch(() => {
+          setUser(prev => prev ? { ...prev, rewardPoints: prev.rewardPoints + points } : prev);
+        });
     }
     setActiveModal('success');
   };
@@ -243,6 +258,7 @@ export default function App() {
         isOpen={activeModal === 'user_dashboard'}
         onClose={() => setActiveModal('none')}
         user={user}
+        recentBookings={userBookings}
       />
 
       <AdminDashboardModal
