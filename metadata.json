@@ -1,0 +1,6 @@
+{
+  "name": "CinePass - Movie Ticket Booking",
+  "description": "Premium BookMyShow-style movie ticket booking platform with interactive seat maps, AI mood recommendations, food combos, wallet & admin analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
