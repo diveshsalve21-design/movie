@@ -15,13 +15,14 @@ import { UserDashboardModal } from './components/UserDashboardModal';
 import { AdminDashboardModal } from './components/AdminDashboardModal';
 
 import { City, Movie, UserProfile, Show, Seat, FoodItem, Booking } from './types/cinema';
+import { MOCK_CITIES, MOCK_USER, MOCK_MOVIES } from './mockData';
 
 export default function App() {
   // Data State
-  const [cities, setCities] = useState<City[]>([]);
-  const [currentCity, setCurrentCity] = useState<City | null>(null);
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [cities, setCities] = useState<City[]>(MOCK_CITIES);
+  const [currentCity, setCurrentCity] = useState<City | null>(MOCK_CITIES[0]);
+  const [movies, setMovies] = useState<Movie[]>(MOCK_MOVIES);
+  const [user, setUser] = useState<UserProfile | null>(MOCK_USER);
   
   // UI State
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,22 +58,25 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // Fetch initial data
+    // Fetch initial data if backend API is available
     Promise.all([
-      fetch('/api/cities').then(res => res.json()),
-      fetch('/api/movies').then(res => res.json()),
-      fetch('/api/user').then(res => res.json())
+      fetch('/api/cities').then(res => res.ok ? res.json() : null),
+      fetch('/api/movies').then(res => res.ok ? res.json() : null),
+      fetch('/api/user').then(res => res.ok ? res.json() : null)
     ])
     .then(([cData, mData, uData]) => {
-      if (cData.success) {
+      if (cData?.success) {
         setCities(cData.cities);
         setCurrentCity(cData.cities[0]);
       }
-      if (mData.success) setMovies(mData.movies);
-      if (uData.success) setUser(uData.user);
+      if (mData?.success) setMovies(mData.movies);
+      if (uData?.success) setUser(uData.user);
     })
-    .catch(console.error);
+    .catch((err) => {
+      console.log('Backend API unavailable, using fallback static data:', err);
+    });
   }, []);
+
 
   // Flow Handlers
   const handleSelectMovie = (movie: Movie) => {

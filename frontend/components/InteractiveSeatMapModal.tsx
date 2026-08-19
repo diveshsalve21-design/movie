@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, ZoomIn, ZoomOut, Check, Sparkles, ArrowRight, ShieldAlert, Monitor } from 'lucide-react';
 import { Show, Movie, Theatre, Seat, SeatCategory } from '../types/cinema';
+import { generateMockSeats, MOCK_THEATRES } from '../mockData';
 
 interface InteractiveSeatMapModalProps {
   show: Show | null;
@@ -28,15 +29,21 @@ export const InteractiveSeatMapModal: React.FC<InteractiveSeatMapModalProps> = (
       setSeats([]);
       setSelectedSeatIds([]);
       fetch(`/api/shows/${show.id}`)
-        .then((res) => res.json())
+        .then((res) => res.ok ? res.json() : null)
         .then((data) => {
-          if (data.success) {
-            setSeats(Array.isArray(data.seats) ? data.seats : []);
+          if (data?.success) {
+            setSeats(Array.isArray(data.seats) ? data.seats : generateMockSeats());
             setMovie(data.movie);
             setTheatre(data.theatre);
+          } else {
+            setSeats(generateMockSeats());
+            setTheatre(MOCK_THEATRES[0]);
           }
         })
-        .catch(console.error)
+        .catch(() => {
+          setSeats(generateMockSeats());
+          setTheatre(MOCK_THEATRES[0]);
+        })
         .finally(() => setLoading(false));
     }
   }, [show, isOpen]);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Minus, Utensils, ArrowRight, Check } from 'lucide-react';
 import { FoodItem, Seat, Show } from '../types/cinema';
+import { MOCK_FOOD_ITEMS } from '../mockData';
 
 interface FoodComboSelectorModalProps {
   isOpen: boolean;
@@ -23,15 +24,16 @@ export const FoodComboSelectorModal: React.FC<FoodComboSelectorModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       fetch('/api/food')
-        .then((res) => res.json())
+        .then((res) => res.ok ? res.json() : null)
         .then((data) => {
-          // The API returns `foodItems`; keep this state an array so an
-          // unexpected response cannot crash the modal during rendering.
-          if (data.success) setFoodItems(Array.isArray(data.foodItems) ? data.foodItems : []);
+          if (data?.success && Array.isArray(data.foodItems)) {
+            setFoodItems(data.foodItems);
+          } else {
+            setFoodItems(MOCK_FOOD_ITEMS);
+          }
         })
-        .catch((error) => {
-          console.error(error);
-          setFoodItems([]);
+        .catch(() => {
+          setFoodItems(MOCK_FOOD_ITEMS);
         });
     }
   }, [isOpen]);
