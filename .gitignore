@@ -10,3 +10,7 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+
+.vercel
+.vercel_python_packages/
+
